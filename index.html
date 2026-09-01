@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Electrical Sales Scorecard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#1B1A17;
+    --panel:#242220;
+    --panel-raised:#2C2A26;
+    --line:#3A3630;
+    --copper:#C1802E;
+    --blue:#5A87A0;
+    --text:#EEE8DC;
+    --text-dim:#9C9384;
+    --green:#7A9968;
+    --red:#BC5245;
+    --amber:#D9A441;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:'Space Grotesk',sans-serif;padding:32px 24px 64px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;
+    border-bottom:2px solid var(--copper);padding-bottom:20px;margin-bottom:24px;
+  }
+  .brand{display:flex;flex-direction:column;gap:4px;}
+  .brand .mark{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;color:var(--copper);}
+  .bolt{width:8px;height:8px;border-radius:50%;background:var(--copper);box-shadow:0 0 8px var(--copper);}
+  h1{margin:0;font-size:30px;font-weight:700;letter-spacing:-0.01em;}
+  .subtitle{color:var(--text-dim);font-size:14px;font-family:'IBM Plex Mono',monospace;}
+
+  nav.pages{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  nav.pages button{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;padding:10px 18px;background:transparent;border:none;
+    color:var(--text-dim);cursor:pointer;transition:background .15s,color .15s;border-left:1px solid var(--line);
+  }
+  nav.pages button:first-child{border-left:none;}
+  nav.pages button.active{background:var(--copper);color:#1B1A17;font-weight:600;}
+  nav.pages button:not(.active):hover{color:var(--text);}
+
+  .page{display:none;}
+  .page.active{display:block;}
+
+  .pace-strip{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text-dim);
+    display:flex;align-items:center;gap:10px;margin-bottom:24px;
+  }
+  .pace-strip .dot{width:6px;height:6px;background:var(--blue);border-radius:50%;flex-shrink:0;}
+
+  .section-label{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--copper);letter-spacing:.04em;margin:0 0 14px;
+  }
+
+  /* Overview cards: two-period comparison */
+  .tech-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;margin-bottom:28px;}
+  .tech-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;position:relative;overflow:hidden;}
+  .tech-card::before{content:"";position:absolute;top:0;left:0;bottom:0;width:3px;background:var(--copper);}
+  .tech-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .tech-name{font-size:19px;font-weight:600;}
+  .tech-flag{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:3px 8px;border-radius:20px;letter-spacing:.03em;}
+  .flag-ahead{background:rgba(122,153,104,.18);color:var(--green);border:1px solid rgba(122,153,104,.4);}
+  .flag-behind{background:rgba(188,82,69,.18);color:var(--red);border:1px solid rgba(188,82,69,.4);}
+  .flag-flat{background:rgba(90,135,160,.18);color:var(--blue);border:1px solid rgba(90,135,160,.4);}
+
+  .period-split{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line);padding-top:14px;}
+  .period-col{padding:0 12px;}
+  .period-col:first-child{border-right:1px solid var(--line);padding-left:0;}
+  .period-col:last-child{padding-right:0;}
+  .period-title{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-dim);letter-spacing:.04em;margin-bottom:6px;}
+  .period-sales{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:var(--amber);}
+  .period-sub{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);margin-top:4px;}
+  .period-sub span{color:var(--text);}
+
+  .view-btn{
+    margin-top:16px;width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:10px;
+    background:var(--panel-raised);border:1px solid var(--line);border-radius:6px;color:var(--text);cursor:pointer;
+    transition:border-color .15s;
+  }
+  .view-btn:hover{border-color:var(--copper);}
+
+  /* Table (used on overview, combined, and on tech pages) */
+  .table-panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:28px;overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;min-width:900px;}
+  thead th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.03em;color:var(--text-dim);padding:14px 14px 10px;border-bottom:1px solid var(--line);font-weight:500;}
+  thead th.grp{color:var(--copper);}
+  tbody td{padding:11px 14px;font-family:'IBM Plex Mono',monospace;font-size:13px;border-bottom:1px solid var(--line);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody td.name{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;color:var(--text);}
+  tbody td.divider{border-right:1px solid var(--line);}
+  td[contenteditable="true"]{cursor:text;border-radius:4px;transition:background .15s;}
+  td[contenteditable="true"]:hover{background:var(--panel-raised);}
+  td[contenteditable="true"]:focus{outline:1px solid var(--copper);background:var(--panel-raised);}
+  td.calc{color:var(--blue);}
+
+  /* Tech detail page */
+  .tech-detail-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+  .tech-detail-head h2{margin:0;font-size:26px;font-weight:700;}
+  .period-toggle{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .period-toggle button{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:9px 16px;background:transparent;border:none;color:var(--text-dim);cursor:pointer;}
+  .period-toggle button.active{background:var(--blue);color:#12191D;font-weight:600;}
+
+  .big-stat{display:flex;align-items:baseline;gap:8px;margin-bottom:2px;}
+  .big-stat .num{font-family:'IBM Plex Mono',monospace;font-size:40px;font-weight:600;color:var(--amber);}
+  .big-stat .label{font-size:13px;color:var(--text-dim);}
+  .proj-line{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text-dim);margin-bottom:18px;}
+  .proj-line span{color:var(--text);}
+
+  .detail-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+  .stat-box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;}
+  .stat-box .sv{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;}
+  .stat-box .sl{font-size:11.5px;color:var(--text-dim);margin-top:6px;}
+
+  .note-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:28px;}
+  .note-card p{margin:0;font-size:14px;line-height:1.6;color:#CFC8BB;}
+
+  footer{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--text-dim);border-top:1px solid var(--line);padding-top:16px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+
+  /* Trends page */
+  .trend-note{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text-dim);margin-bottom:24px;line-height:1.6;}
+  .legend-row{display:flex;gap:18px;margin-bottom:20px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);}
+  .legend-row span{display:flex;align-items:center;gap:6px;}
+  .legend-row i{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  .chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:18px;}
+  .chart-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;}
+  .chart-card h3{margin:0 0 12px;font-size:14px;font-weight:600;color:var(--text);}
+  .chart-card canvas{max-height:220px;}
+  .single-month-note{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:10px;text-align:center;}
+
+  @media(max-width:640px){
+    h1{font-size:24px;}
+    .detail-stats{grid-template-columns:1fr 1fr;}
+    .period-split{grid-template-columns:1fr;}
+    .period-col:first-child{border-right:none;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:12px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="mark"><span class="bolt"></span>HURLBURT HEATING, COOLING &amp; PLUMBING</div>
+      <h1>Electrical Sales Scorecard</h1>
+      <div class="subtitle" id="header-sub">Overview · MTD Day 1 of 21 working days vs. Last Month Final</div>
+    </div>
+    <nav class="pages">
+      <button class="active" data-page="overview" onclick="setPage('overview')">Overview</button>
+      <button data-page="0" onclick="setPage('0')">Brice K</button>
+      <button data-page="1" onclick="setPage('1')">Griffin M</button>
+    </nav>
+  </header>
+
+  <!-- OVERVIEW PAGE -->
+  <div class="page active" id="page-overview">
+    <div class="pace-strip"><span class="dot"></span>MTD pace projects each tech's month-end total from Total Sales ÷ working days elapsed × total working days, Monday through Friday only.</div>
+
+    <div class="tech-grid" id="overview-cards"></div>
+
+    <div class="section-label">FULL BREAKDOWN — BOTH PERIODS</div>
+    <div class="table-panel">
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="2" style="vertical-align:bottom;">Tech</th>
+            <th class="grp" colspan="4">Month-to-Date</th>
+            <th class="grp" colspan="4">Last Month</th>
+          </tr>
+          <tr>
+            <th>Jobs</th><th>Close Rate</th><th>Sales</th><th>Avg Ticket</th>
+            <th>Jobs</th><th>Close Rate</th><th>Sales</th><th>Avg Ticket</th>
+          </tr>
+        </thead>
+        <tbody id="overview-table-body"></tbody>
+      </table>
+    </div>
+
+    <div class="section-label">TRENDS OVER TIME</div>
+    <div class="trend-note" id="trend-note"></div>
+    <div class="legend-row">
+      <span><i style="background:var(--copper);"></i>Brice K</span>
+      <span><i style="background:var(--blue);"></i>Griffin M</span>
+    </div>
+    <div class="chart-grid" id="chart-grid"></div>
+  </div>
+
+  <!-- TECH DETAIL PAGES -->
+  <div class="page" id="page-0"></div>
+  <div class="page" id="page-1"></div>
+
+  <footer>
+    <span>Editable cells update live — click into Jobs, Tasks/Opp, Options/Opp, Closed, Close Rate, Sales, or Memberships to update from the weekly report.</span>
+    <span id="today-label"></span>
+  </footer>
+
+</div>
+
+<script>
+let data = {
+  mtd: {
+    daysElapsed: 1, daysTotal: 21,
+    techs: [
+      { name:"Brice K", jobs:1, tasksOpp:1.0, optionsOpp:1.0, closed:0, closeRate:0.0, sales:0, memberships:0 },
+      { name:"Griffin M", jobs:0, tasksOpp:0.0, optionsOpp:0.0, closed:0, closeRate:0.0, sales:0, memberships:0 }
+    ]
+  },
+  lastmonth: {
+    daysElapsed: 21, daysTotal: 21,
+    techs: [
+      { name:"Brice K", jobs:41, tasksOpp:0.06, optionsOpp:1.36, closed:15, closeRate:0.4545, sales:46914.42, memberships:0 },
+      { name:"Griffin M", jobs:56, tasksOpp:0.44, optionsOpp:2.00, closed:27, closeRate:0.5000, sales:58999.52, memberships:0 }
+    ]
+  }
+};
+
+// History for the Trends page — append one entry per month you upload.
+// avgTicket is derived automatically from sales/closed, no need to enter it.
+let history = [
+  { month:"Apr 2026", techs:[
+      { name:"Brice K", sales:52879.54, closeRate:0.6000, jobs:41, closed:12, tasksOpp:0.00, optionsOpp:1.45, memberships:0 },
+      { name:"Griffin M", sales:0.00, closeRate:0.0000, jobs:0, closed:0, tasksOpp:0.00, optionsOpp:0.00, memberships:0 }
+  ]},
+  { month:"May 2026", techs:[
+      { name:"Brice K", sales:77521.08, closeRate:0.6452, jobs:49, closed:20, tasksOpp:0.00, optionsOpp:1.55, memberships:0 },
+      { name:"Griffin M", sales:0.00, closeRate:0.0000, jobs:0, closed:0, tasksOpp:0.00, optionsOpp:0.00, memberships:0 }
+  ]},
+  { month:"Jun 2026", techs:[
+      { name:"Brice K", sales:65477.12, closeRate:0.5200, jobs:76, closed:26, tasksOpp:0.21, optionsOpp:1.36, memberships:0 },
+      { name:"Griffin M", sales:0.00, closeRate:0.0000, jobs:0, closed:0, tasksOpp:0.00, optionsOpp:0.00, memberships:0 }
+  ]},
+  { month:"Jul 2026", techs:[
+      { name:"Brice K", sales:58200.11, closeRate:0.3409, jobs:60, closed:15, tasksOpp:0.07, optionsOpp:1.57, memberships:0 },
+      { name:"Griffin M", sales:99.00, closeRate:0.3333, jobs:3, closed:1, tasksOpp:0.33, optionsOpp:3.33, memberships:0 }
+  ]},
+  { month:"Aug 2026", techs:[
+      { name:"Brice K", sales:46914.42, closeRate:0.4545, jobs:41, closed:15, tasksOpp:0.06, optionsOpp:1.36, memberships:0 },
+      { name:"Griffin M", sales:58999.52, closeRate:0.5000, jobs:56, closed:27, tasksOpp:0.44, optionsOpp:2.00, memberships:0 }
+  ]}
+];
+
+let charts = {};
+let currentPage = "overview";
+let detailPeriod = { 0:"mtd", 1:"mtd" }; // per-tech period toggle on detail pages
+
+function fmtMoney(n){ return "$" + Math.round(n).toLocaleString("en-US"); }
+function fmtPct(n){ return (n*100).toFixed(1) + "%"; }
+
+function paceProjection(t, elapsed, total){
+  if(elapsed <= 0) return { sales:0 };
+  return { sales: (t.sales / elapsed) * total };
+}
+
+function paceFlag(actual, projected){
+  if(projected === 0 && actual === 0) return {cls:"flag-flat", label:"NO DATA YET"};
+  const ratio = actual === 0 ? 0 : projected/Math.max(actual,1);
+  if(ratio >= 1.05) return {cls:"flag-ahead", label:"AHEAD OF PACE"};
+  if(ratio <= 0.95) return {cls:"flag-behind", label:"BEHIND PACE"};
+  return {cls:"flag-flat", label:"ON PACE"};
+}
+
+function coachingNote(t, isMTD, proj){
+  const avgTicket = t.closed > 0 ? t.sales / t.closed : 0;
+  let lines = [];
+  if(t.closed > 0){
+    lines.push(`Closed ${t.closed} of ${t.jobs || t.closed} at a ${fmtPct(t.closeRate)} close rate, averaging ${fmtMoney(avgTicket)} per ticket.`);
+  } else {
+    lines.push(`No closed opportunities logged yet this period.`);
+  }
+  if(isMTD && (proj.sales > t.sales * 1.1 || t.sales === 0)){
+    lines.push(`Early pace projects to roughly ${fmtMoney(proj.sales)} by month end if the current rate holds.`);
+  }
+  if(t.optionsOpp < 1.2 && t.jobs > 0){
+    lines.push(`Options per opportunity is light at ${t.optionsOpp.toFixed(1)}, worth a quick check on whether multiple options are being presented on every estimate.`);
+  } else if(t.jobs > 0){
+    lines.push(`Options per opportunity at ${t.optionsOpp.toFixed(1)} is solid, good habit to keep reinforcing.`);
+  }
+  return lines.join(" ");
+}
+
+function setPage(p){
+  currentPage = p;
+  document.querySelectorAll("nav.pages button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.page === p);
+  });
+  document.querySelectorAll(".page").forEach(pg=>pg.classList.remove("active"));
+  document.getElementById("page-" + p).classList.add("active");
+
+  if(p === "overview"){
+    document.getElementById("header-sub").textContent = `Overview · MTD Day ${data.mtd.daysElapsed} of ${data.mtd.daysTotal} working days vs. Last Month Final`;
+  } else {
+    document.getElementById("header-sub").textContent = `${data.mtd.techs[parseInt(p)].name} · Individual scorecard`;
+  }
+
+  render();
+}
+
+function renderOverview(){
+  const cards = document.getElementById("overview-cards");
+  cards.innerHTML = "";
+  data.mtd.techs.forEach((tm, idx)=>{
+    const tl = data.lastmonth.techs[idx];
+    const proj = paceProjection(tm, data.mtd.daysElapsed, data.mtd.daysTotal);
+    const flag = paceFlag(tm.sales, proj.sales);
+    const card = document.createElement("div");
+    card.className = "tech-card";
+    card.innerHTML = `
+      <div class="tech-head">
+        <div class="tech-name">${tm.name}</div>
+        <div class="tech-flag ${flag.cls}">${flag.label}</div>
+      </div>
+      <div class="period-split">
+        <div class="period-col">
+          <div class="period-title">MONTH-TO-DATE</div>
+          <div class="period-sales">${fmtMoney(tm.sales)}</div>
+          <div class="period-sub">Proj. month end: <span>${fmtMoney(proj.sales)}</span></div>
+          <div class="period-sub">Close rate: <span>${fmtPct(tm.closeRate)}</span></div>
+        </div>
+        <div class="period-col">
+          <div class="period-title">LAST MONTH</div>
+          <div class="period-sales">${fmtMoney(tl.sales)}</div>
+          <div class="period-sub">Closed: <span>${tl.closed}</span> jobs</div>
+          <div class="period-sub">Close rate: <span>${fmtPct(tl.closeRate)}</span></div>
+        </div>
+      </div>
+      <button class="view-btn" onclick="setPage('${idx}')">View full scorecard →</button>
+    `;
+    cards.appendChild(card);
+  });
+
+  const tbody = document.getElementById("overview-table-body");
+  tbody.innerHTML = "";
+  data.mtd.techs.forEach((tm, idx)=>{
+    const tl = data.lastmonth.techs[idx];
+    const mAvg = tm.closed > 0 ? tm.sales/tm.closed : 0;
+    const lAvg = tl.closed > 0 ? tl.sales/tl.closed : 0;
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td class="name">${tm.name}</td>
+      <td class="divider">${tm.jobs}</td>
+      <td class="divider">${fmtPct(tm.closeRate)}</td>
+      <td class="divider">${fmtMoney(tm.sales)}</td>
+      <td class="divider calc">${mAvg > 0 ? fmtMoney(mAvg) : "—"}</td>
+      <td>${tl.jobs}</td>
+      <td>${fmtPct(tl.closeRate)}</td>
+      <td>${fmtMoney(tl.sales)}</td>
+      <td class="calc">${lAvg > 0 ? fmtMoney(lAvg) : "—"}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function renderDetail(idx){
+  idx = parseInt(idx);
+  const period = detailPeriod[idx];
+  const isMTD = period === "mtd";
+  const periodData = data[isMTD ? "mtd" : "lastmonth"];
+  const t = periodData.techs[idx];
+  const proj = isMTD ? paceProjection(t, periodData.daysElapsed, periodData.daysTotal) : { sales:t.sales };
+  const flag = isMTD ? paceFlag(t.sales, proj.sales) : null;
+  const avgTicket = t.closed > 0 ? t.sales / t.closed : 0;
+
+  const el = document.getElementById("page-" + idx);
+  el.innerHTML = `
+    <div class="tech-detail-head">
+      <h2>${t.name}</h2>
+      <div class="period-toggle">
+        <button class="${isMTD ? 'active':''}" onclick="setDetailPeriod(${idx},'mtd')">MTD Pace</button>
+        <button class="${!isMTD ? 'active':''}" onclick="setDetailPeriod(${idx},'lastmonth')">Last Month</button>
+      </div>
+    </div>
+
+    <div class="big-stat">
+      <span class="num">${fmtMoney(t.sales)}</span>
+      <span class="label">${isMTD ? "MTD sales" : "total sales, last month"}</span>
+    </div>
+    ${isMTD
+      ? `<div class="proj-line">Projected month end: <span>${fmtMoney(proj.sales)}</span> — <span class="tech-flag ${flag.cls}" style="margin-left:4px;">${flag.label}</span></div>`
+      : `<div class="proj-line">Final numbers for the period.</div>`}
+
+    <div class="detail-stats">
+      <div class="stat-box"><div class="sv">${fmtPct(t.closeRate)}</div><div class="sl">CLOSE RATE</div></div>
+      <div class="stat-box"><div class="sv">${avgTicket > 0 ? fmtMoney(avgTicket) : "—"}</div><div class="sl">AVG SOLD TICKET</div></div>
+      <div class="stat-box"><div class="sv">${t.jobs}</div><div class="sl">JOBS COMPLETED</div></div>
+      <div class="stat-box"><div class="sv">${t.memberships}</div><div class="sl">MEMBERSHIPS SOLD</div></div>
+    </div>
+
+    <div class="section-label">EDIT DATA — ${isMTD ? "MONTH-TO-DATE" : "LAST MONTH"}</div>
+    <div class="table-panel">
+      <table style="min-width:0;">
+        <thead>
+          <tr><th>Jobs</th><th>Tasks/Opp</th><th>Options/Opp</th><th>Closed</th><th>Close Rate %</th><th>Sales $</th><th>Memberships</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td contenteditable="true" data-period="${isMTD?'mtd':'lastmonth'}" data-idx="${idx}" data-field="jobs">${t.jobs}</td>
+            <td contenteditable="true" data-period="${isMTD?'mtd':'lastmonth'}" data-idx="${idx}" data-field="tasksOpp">${t.tasksOpp.toFixed(1)}</td>
+            <td contenteditable="true" data-period="${isMTD?'mtd':'lastmonth'}" data-idx="${idx}" data-field="optionsOpp">${t.optionsOpp.toFixed(1)}</td>
+            <td contenteditable="true" data-period="${isMTD?'mtd':'lastmonth'}" data-idx="${idx}" data-field="closed">${t.closed}</td>
+            <td contenteditable="true" data-period="${isMTD?'mtd':'lastmonth'}" data-idx="${idx}" data-field="closeRatePct">${(t.closeRate*100).toFixed(1)}</td>
+            <td contenteditable="true" data-period="${isMTD?'mtd':'lastmonth'}" data-idx="${idx}" data-field="sales">${Math.round(t.sales)}</td>
+            <td contenteditable="true" data-period="${isMTD?'mtd':'lastmonth'}" data-idx="${idx}" data-field="memberships">${t.memberships}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-label">COACHING NOTE</div>
+    <div class="note-card"><p>${coachingNote(t, isMTD, proj)}</p></div>
+  `;
+
+  el.querySelectorAll("[contenteditable]").forEach(cell=>{
+    cell.addEventListener("blur", onEdit);
+  });
+}
+
+function setDetailPeriod(idx, period){
+  detailPeriod[idx] = period;
+  renderDetail(idx);
+}
+
+function onEdit(e){
+  const cell = e.target;
+  const idx = parseInt(cell.dataset.idx);
+  const period = cell.dataset.period;
+  const field = cell.dataset.field;
+  let val = parseFloat(cell.textContent.replace(/[^0-9.\-]/g,""));
+  if(isNaN(val)) val = 0;
+
+  if(field === "closeRatePct"){
+    data[period].techs[idx].closeRate = val / 100;
+  } else {
+    data[period].techs[idx][field] = val;
+  }
+  render();
+}
+
+const METRICS = [
+  { key:"sales",      label:"Total Sales",           fmt:v=>fmtMoney(v) },
+  { key:"closeRate",  label:"Close Rate",             fmt:v=>fmtPct(v) },
+  { key:"jobs",       label:"Jobs Completed",         fmt:v=>Math.round(v) },
+  { key:"avgTicket",  label:"Avg Sold Ticket",        fmt:v=>fmtMoney(v) }
+];
+
+function renderTrends(){
+  const note = document.getElementById("trend-note");
+  note.textContent = history.length < 2
+    ? "Only one month of history loaded so far. Upload more monthly reports and each chart below will fill in as a trendline."
+    : `Trend across ${history.length} months of uploaded reports.`;
+
+  const grid = document.getElementById("chart-grid");
+  grid.innerHTML = "";
+  const labels = history.map(h=>h.month);
+
+  METRICS.forEach(metric=>{
+    const card = document.createElement("div");
+    card.className = "chart-card";
+    card.innerHTML = `<h3>${metric.label}</h3><canvas id="chart-${metric.key}"></canvas>${history.length<2 ? `<div class="single-month-note">Add another month to see a trendline</div>`:''}`;
+    grid.appendChild(card);
+  });
+
+  METRICS.forEach(metric=>{
+    const ctx = document.getElementById(`chart-${metric.key}`).getContext("2d");
+    const brice = history.map(h=>{
+      const t = h.techs.find(x=>x.name==="Brice K");
+      if(metric.key==="avgTicket") return t.closed>0 ? t.sales/t.closed : 0;
+      return t[metric.key];
+    });
+    const griffin = history.map(h=>{
+      const t = h.techs.find(x=>x.name==="Griffin M");
+      if(metric.key==="avgTicket") return t.closed>0 ? t.sales/t.closed : 0;
+      return t[metric.key];
+    });
+
+    if(charts[metric.key]) charts[metric.key].destroy();
+    charts[metric.key] = new Chart(ctx, {
+      type:"line",
+      data:{
+        labels:labels,
+        datasets:[
+          { label:"Brice K", data:brice, borderColor:"#C1802E", backgroundColor:"#C1802E", tension:0.3, pointRadius:4 },
+          { label:"Griffin M", data:griffin, borderColor:"#5A87A0", backgroundColor:"#5A87A0", tension:0.3, pointRadius:4 }
+        ]
+      },
+      options:{
+        responsive:true,
+        plugins:{ legend:{ display:false },
+          tooltip:{ callbacks:{ label:(c)=>`${c.dataset.label}: ${metric.fmt(c.raw)}` } } },
+        scales:{
+          x:{ ticks:{ color:"#9C9384", font:{family:"IBM Plex Mono", size:11} }, grid:{ color:"#3A3630" } },
+          y:{ ticks:{ color:"#9C9384", font:{family:"IBM Plex Mono", size:11},
+                callback:(v)=>metric.fmt(v) }, grid:{ color:"#3A3630" } }
+        }
+      }
+    });
+  });
+}
+
+function render(){
+  renderOverview();
+  renderDetail(0);
+  renderDetail(1);
+  if(currentPage === "overview") renderTrends();
+  document.getElementById("today-label").textContent = "Updated " + new Date().toLocaleDateString("en-US", {weekday:"long", month:"short", day:"numeric"});
+}
+
+render();
+</script>
+</body>
+</html>
