@@ -450,20 +450,26 @@ const METRICS = [
 ];
 
 function renderTrends(){
-  // Chart series = closed history months + current MTD (not permanently appended to history)
+  // Chart series = closed history months + current month pace projection (not permanently appended to history)
   const trendSeries = history.slice();
   let includesMTD = false;
   const mtdEmpty = data.mtd.daysElapsed === 0 && data.mtd.techs.every(t => t.sales === 0 && t.jobs === 0);
   if(!mtdEmpty){
-    const mtdLabel = new Date().toLocaleDateString("en-US", { month:"short", year:"numeric" }) + " (MTD)";
+    const elapsed = data.mtd.daysElapsed;
+    const total = data.mtd.daysTotal;
+    const mtdLabel = new Date().toLocaleDateString("en-US", { month:"short", year:"numeric" }) + " (pace)";
     trendSeries.push({
       month: mtdLabel,
       techs: data.mtd.techs.map(t => ({
         name: t.name,
-        sales: t.sales,
+        // Sales & jobs: working-day pace to month end (same formula as paceProjection for sales)
+        sales: elapsed > 0 ? (t.sales / elapsed) * total : t.sales,
+        jobs: elapsed > 0 ? Math.round((t.jobs / elapsed) * total) : t.jobs,
+        // Close rate held flat — scorecard does not pace-project close rate
         closeRate: t.closeRate,
-        jobs: t.jobs,
         closed: t.closed,
+        // Avg ticket stays actual MTD (sales/closed), not paced
+        avgTicket: t.closed > 0 ? t.sales / t.closed : 0,
         tasksOpp: t.tasksOpp,
         optionsOpp: t.optionsOpp,
         memberships: t.memberships
@@ -477,7 +483,7 @@ function renderTrends(){
   if(closedCount < 2 && !includesMTD){
     note.textContent = "Only one month of history loaded so far. Upload more monthly reports and each chart below will fill in as a trendline.";
   } else if(includesMTD){
-    note.textContent = `Trends across ${closedCount} closed month${closedCount === 1 ? "" : "s"} plus current MTD.`;
+    note.textContent = `Trends across ${closedCount} closed month${closedCount === 1 ? "" : "s"} plus current month pace projection.`;
   } else {
     note.textContent = `Trend across ${closedCount} months of uploaded reports.`;
   }
@@ -497,12 +503,12 @@ function renderTrends(){
     const ctx = document.getElementById(`chart-${metric.key}`).getContext("2d");
     const brice = trendSeries.map(h=>{
       const t = h.techs.find(x=>x.name==="Brice K");
-      if(metric.key==="avgTicket") return t.closed>0 ? t.sales/t.closed : 0;
+      if(metric.key==="avgTicket") return t.avgTicket != null ? t.avgTicket : (t.closed>0 ? t.sales/t.closed : 0);
       return t[metric.key];
     });
     const griffin = trendSeries.map(h=>{
       const t = h.techs.find(x=>x.name==="Griffin M");
-      if(metric.key==="avgTicket") return t.closed>0 ? t.sales/t.closed : 0;
+      if(metric.key==="avgTicket") return t.avgTicket != null ? t.avgTicket : (t.closed>0 ? t.sales/t.closed : 0);
       return t[metric.key];
     });
 
