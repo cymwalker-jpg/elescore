@@ -150,7 +150,7 @@
     <div class="brand">
       <div class="mark"><span class="bolt"></span>HURLBURT HEATING, COOLING &amp; PLUMBING</div>
       <h1>Electrical Sales Scorecard</h1>
-      <div class="subtitle" id="header-sub">Overview · MTD Day 1 of 21 working days vs. Last Month Final</div>
+      <div class="subtitle" id="header-sub">Overview · MTD Day 20 of 21 working days vs. Last Month Final</div>
     </div>
     <nav class="pages">
       <button class="active" data-page="overview" onclick="setPage('overview')">Overview</button>
@@ -540,7 +540,10 @@ function render(){
   renderOverview();
   renderDetail(0);
   renderDetail(1);
-  if(currentPage === "overview") renderTrends();
+  if(currentPage === "overview"){
+    document.getElementById("header-sub").textContent = `Overview · MTD Day ${data.mtd.daysElapsed} of ${data.mtd.daysTotal} working days vs. Last Month Final`;
+    renderTrends();
+  }
   document.getElementById("today-label").textContent = "Updated " + new Date().toLocaleDateString("en-US", {weekday:"long", month:"short", day:"numeric"});
 }
 
