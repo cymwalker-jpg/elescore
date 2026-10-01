@@ -206,17 +206,17 @@
 <script>
 let data = {
   mtd: {
-    daysElapsed: 20, daysTotal: 21,
+    daysElapsed: 0, daysTotal: 22,
     techs: [
-      { name:"Brice K", jobs:40, tasksOpp:0.42, optionsOpp:1.12, closed:15, closeRate:0.375, sales:41796, memberships:0 },
-      { name:"Griffin M", jobs:52, tasksOpp:0.25, optionsOpp:1.58, closed:14, closeRate:0.269, sales:61860, memberships:0 }
+      { name:"Brice K", jobs:0, tasksOpp:0, optionsOpp:0, closed:0, closeRate:0, sales:0, memberships:0 },
+      { name:"Griffin M", jobs:0, tasksOpp:0, optionsOpp:0, closed:0, closeRate:0, sales:0, memberships:0 }
     ]
   },
   lastmonth: {
     daysElapsed: 21, daysTotal: 21,
     techs: [
-      { name:"Brice K", jobs:41, tasksOpp:0.06, optionsOpp:1.35, closed:15, closeRate:0.4839, sales:46914.42, memberships:0 },
-      { name:"Griffin M", jobs:56, tasksOpp:0.48, optionsOpp:2.00, closed:27, closeRate:0.5294, sales:58999.52, memberships:0 }
+      { name:"Brice K", jobs:47, tasksOpp:0.38, optionsOpp:1.30, closed:20, closeRate:0.4255, sales:50398.75, memberships:0 },
+      { name:"Griffin M", jobs:60, tasksOpp:0.29, optionsOpp:1.62, closed:18, closeRate:0.30, sales:87339.44, memberships:0 }
     ]
   }
 };
@@ -243,6 +243,10 @@ let history = [
   { month:"Aug 2026", techs:[
       { name:"Brice K", sales:46914.42, closeRate:0.4839, jobs:41, closed:15, tasksOpp:0.06, optionsOpp:1.35, memberships:0 },
       { name:"Griffin M", sales:58999.52, closeRate:0.5294, jobs:56, closed:27, tasksOpp:0.48, optionsOpp:2.00, memberships:0 }
+  ]},
+  { month:"Sep 2026", techs:[
+      { name:"Brice K", sales:50398.75, closeRate:0.4255, jobs:47, closed:20, tasksOpp:0.38, optionsOpp:1.30, memberships:0 },
+      { name:"Griffin M", sales:87339.44, closeRate:0.30, jobs:60, closed:18, tasksOpp:0.29, optionsOpp:1.62, memberships:0 }
   ]}
 ];
 
