@@ -150,7 +150,7 @@
     <div class="brand">
       <div class="mark"><span class="bolt"></span>HURLBURT HEATING, COOLING &amp; PLUMBING</div>
       <h1>Electrical Sales Scorecard</h1>
-      <div class="subtitle" id="header-sub">Overview · MTD Day 18 of 22 working days vs. Last Month Final</div>
+      <div class="subtitle" id="header-sub">Overview · MTD Day 0 of 21 working days vs. Last Month Final</div>
     </div>
     <nav class="pages">
       <button class="active" data-page="overview" onclick="setPage('overview')">Overview</button>
@@ -206,17 +206,17 @@
 <script>
 let data = {
   mtd: {
-    daysElapsed: 18, daysTotal: 22,
+    daysElapsed: 0, daysTotal: 21,
     techs: [
-      { name:"Brice K", jobs:38, tasksOpp:0, optionsOpp:1.53, closed:22, closeRate:0.5789, sales:44524.05, memberships:0 },
-      { name:"Griffin M", jobs:39, tasksOpp:0.43, optionsOpp:1.36, closed:16, closeRate:0.4103, sales:26387.92, memberships:0 }
+      { name:"Brice K", jobs:0, tasksOpp:0, optionsOpp:0, closed:0, closeRate:0, sales:0, memberships:0 },
+      { name:"Griffin M", jobs:0, tasksOpp:0, optionsOpp:0, closed:0, closeRate:0, sales:0, memberships:0 }
     ]
   },
   lastmonth: {
-    daysElapsed: 21, daysTotal: 21,
+    daysElapsed: 22, daysTotal: 22,
     techs: [
-      { name:"Brice K", jobs:47, tasksOpp:0.38, optionsOpp:1.30, closed:20, closeRate:0.4255, sales:50398.75, memberships:0 },
-      { name:"Griffin M", jobs:60, tasksOpp:0.29, optionsOpp:1.62, closed:18, closeRate:0.30, sales:87339.44, memberships:0 }
+      { name:"Brice K", jobs:45, tasksOpp:0.00, optionsOpp:1.60, closed:28, closeRate:0.6222, sales:62266.05, memberships:0 },
+      { name:"Griffin M", jobs:52, tasksOpp:0.38, optionsOpp:1.42, closed:20, closeRate:0.3846, sales:48707.92, memberships:0 }
     ]
   }
 };
@@ -247,6 +247,10 @@ let history = [
   { month:"Sep 2026", techs:[
       { name:"Brice K", sales:50398.75, closeRate:0.4255, jobs:47, closed:20, tasksOpp:0.38, optionsOpp:1.30, memberships:0 },
       { name:"Griffin M", sales:87339.44, closeRate:0.30, jobs:60, closed:18, tasksOpp:0.29, optionsOpp:1.62, memberships:0 }
+  ]},
+  { month:"Oct 2026", techs:[
+      { name:"Brice K", sales:62266.05, closeRate:0.6222, jobs:45, closed:28, tasksOpp:0.00, optionsOpp:1.60, memberships:0 },
+      { name:"Griffin M", sales:48707.92, closeRate:0.3846, jobs:52, closed:20, tasksOpp:0.38, optionsOpp:1.42, memberships:0 }
   ]}
 ];
 
